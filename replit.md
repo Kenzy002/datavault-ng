@@ -1,6 +1,6 @@
-# [Project name]
+# DataVault Nigeria
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+DataVault helps Nigerians manage airtime, mobile data, electricity, cable TV, digital subscriptions, and a test-mode NGN wallet from one responsive app.
 
 ## Run & Operate
 
@@ -22,23 +22,33 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/datavault` — responsive customer app, Clerk sign-in, and administrator screens
+- `artifacts/api-server/src/routes` — authenticated customer and administrator API
+- `lib/api-spec/openapi.yaml` — source of truth for API contracts and generated hooks
+- `lib/db/src/schema/datavault.ts` — DataVault PostgreSQL schema
+- `artifacts/api-server/src/lib/catalog.ts` — seed test-mode service plans
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Clerk owns sign-in; the API maps Clerk user IDs to local profiles and checks admin roles in PostgreSQL.
+- Store NGN values as integer kobo to avoid floating-point money calculations.
+- Wallet funding and all bill purchases are simulated and must remain visibly marked as test mode until real providers are configured.
+- `DATAVAULT_ADMIN_EMAILS` is a comma-separated bootstrap allowlist for the first admin account(s). Set it before the matching account signs in; an administrator can manage later roles in the admin screen.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+Customers can create accounts, view their wallet and spending, simulate airtime/data and bill purchases, review transactions, manage their profile, and read in-app notifications. Administrators can review platform activity and manage customer status and roles.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Keep the UI responsive on mobile and desktop.
+- Do not connect payment or VTU providers until the user supplies the credentials.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Development and production Clerk accounts are separate; configure an admin email allowlist in each environment where an admin must sign in.
+- Service plans are inserted into the database idempotently when the catalog or a purchase is first requested.
+- Regenerate API hooks and Zod schemas after changing `lib/api-spec/openapi.yaml`.
 
 ## Pointers
 

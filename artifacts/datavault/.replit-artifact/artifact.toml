@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "DataVault Nigeria"
+description = "A mobile-first Nigerian digital services wallet for managing airtime, mobile data, utility bills, TV subscriptions, transaction history, notifications, and administration."
+version = "1.0.0"
+id = "artifacts/datavault"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20672
+
+[services.development]
+run = "pnpm --filter @workspace/datavault run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/datavault", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/datavault/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20672"
+BASE_PATH = "/"

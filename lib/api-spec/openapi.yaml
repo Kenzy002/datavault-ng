@@ -3,13 +3,25 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: DataVault Nigeria customer wallet, bill payment, and administration API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: account
+    description: Customer account and dashboard
+  - name: services
+    description: Mock bill payment catalog and purchases
+  - name: wallet
+    description: NGN wallet
+  - name: transactions
+    description: Purchase history
+  - name: notifications
+    description: In-app notifications
+  - name: admin
+    description: Administrator operations
 paths:
   /healthz:
     get:
@@ -24,7 +36,296 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /me:
+    get:
+      operationId: getMyProfile
+      tags: [account]
+      summary: Get or provision the signed-in user's local profile
+      security:
+        - clerkSession: []
+      responses:
+        "200":
+          description: Current profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+    patch:
+      operationId: updateMyProfile
+      tags: [account]
+      summary: Update editable profile fields
+      security:
+        - clerkSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserProfileUpdate"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [account]
+      summary: Get wallet totals, monthly spend, and recent activity
+      security:
+        - clerkSession: []
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+  /services:
+    get:
+      operationId: listServices
+      tags: [services]
+      summary: List available test-mode service plans
+      security:
+        - clerkSession: []
+      responses:
+        "200":
+          description: Service catalog
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ServiceProduct"
+  /wallet:
+    get:
+      operationId: getWallet
+      tags: [wallet]
+      summary: Get the signed-in user's wallet
+      security:
+        - clerkSession: []
+      responses:
+        "200":
+          description: Wallet balance
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Wallet"
+  /wallet/top-ups:
+    post:
+      operationId: createWalletTopUp
+      tags: [wallet]
+      summary: Add test funds to the wallet without processing a real payment
+      security:
+        - clerkSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WalletTopUpInput"
+      responses:
+        "201":
+          description: Test-mode wallet top-up
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WalletTopUpResult"
+  /transactions:
+    get:
+      operationId: listTransactions
+      tags: [transactions]
+      summary: List the signed-in user's transaction history
+      security:
+        - clerkSession: []
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 30
+      responses:
+        "200":
+          description: Transaction history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transaction"
+    post:
+      operationId: createPurchase
+      tags: [transactions]
+      summary: Simulate a bill or digital subscription purchase
+      security:
+        - clerkSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PurchaseInput"
+      responses:
+        "201":
+          description: Test-mode purchase
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+        "400":
+          description: Invalid purchase details
+        "402":
+          description: Insufficient wallet balance
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      summary: List in-app notifications
+      security:
+        - clerkSession: []
+      responses:
+        "200":
+          description: Notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+  /notifications/{id}/read:
+    patch:
+      operationId: markNotificationRead
+      tags: [notifications]
+      summary: Mark a notification as read
+      security:
+        - clerkSession: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated notification
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notification"
+        "404":
+          description: Notification not found
+  /notifications/read-all:
+    patch:
+      operationId: markAllNotificationsRead
+      tags: [notifications]
+      summary: Mark all notifications as read
+      security:
+        - clerkSession: []
+      responses:
+        "204":
+          description: All notifications marked read
+  /admin/overview:
+    get:
+      operationId: getAdminOverview
+      tags: [admin]
+      summary: Get administration overview metrics
+      security:
+        - clerkSession: []
+      responses:
+        "200":
+          description: Admin dashboard overview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminOverview"
+        "403":
+          description: Administrator access required
+  /admin/users:
+    get:
+      operationId: listAdminUsers
+      tags: [admin]
+      summary: List customer accounts for administration
+      security:
+        - clerkSession: []
+      responses:
+        "200":
+          description: Customer accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminUser"
+        "403":
+          description: Administrator access required
+  /admin/users/{id}:
+    patch:
+      operationId: updateAdminUser
+      tags: [admin]
+      summary: Update a customer's active status or role
+      security:
+        - clerkSession: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUserUpdate"
+      responses:
+        "200":
+          description: Updated customer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+        "403":
+          description: Administrator access required
+        "404":
+          description: Customer not found
+  /admin/transactions:
+    get:
+      operationId: listAdminTransactions
+      tags: [admin]
+      summary: List platform transactions for administration
+      security:
+        - clerkSession: []
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+      responses:
+        "200":
+          description: Platform transaction list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminTransaction"
+        "403":
+          description: Administrator access required
 components:
+  securitySchemes:
+    clerkSession:
+      type: apiKey
+      in: cookie
+      name: __session
   schemas:
     HealthStatus:
       type: object
@@ -33,4 +334,142 @@ components:
           type: string
       required:
         - status
+    UserProfile:
+      type: object
+      required: [id, email, name, phone, role, isActive, createdAt]
+      properties:
+        id: { type: string }
+        email: { type: string, format: email }
+        name: { type: string }
+        phone: { type: ["string", "null"] }
+        role: { type: string, enum: [customer, admin] }
+        isActive: { type: boolean }
+        createdAt: { type: string, format: date-time }
+    UserProfileUpdate:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        phone: { type: ["string", "null"], maxLength: 30 }
+    Wallet:
+      type: object
+      required: [id, balanceKobo, currency, updatedAt]
+      properties:
+        id: { type: integer }
+        balanceKobo: { type: integer, minimum: 0 }
+        currency: { type: string, enum: [NGN] }
+        updatedAt: { type: string, format: date-time }
+    Transaction:
+      type: object
+      required: [id, category, provider, description, accountReference, amountKobo, status, isTest, createdAt]
+      properties:
+        id: { type: integer }
+        category: { type: string, enum: [airtime, mobile_data, electricity, cable_tv, digital_subscription, wallet_top_up] }
+        provider: { type: string }
+        description: { type: string }
+        accountReference: { type: string }
+        amountKobo: { type: integer, minimum: 0 }
+        status: { type: string, enum: [successful, pending, failed] }
+        isTest: { type: boolean }
+        createdAt: { type: string, format: date-time }
+    ServiceProduct:
+      type: object
+      required: [id, category, provider, name, description, priceKobo, minAmountKobo, maxAmountKobo]
+      properties:
+        id: { type: string }
+        category: { type: string, enum: [airtime, mobile_data, electricity, cable_tv, digital_subscription] }
+        provider: { type: string }
+        name: { type: string }
+        description: { type: string }
+        priceKobo: { type: ["integer", "null"], minimum: 0 }
+        minAmountKobo: { type: ["integer", "null"], minimum: 0 }
+        maxAmountKobo: { type: ["integer", "null"], minimum: 0 }
+    DashboardSummary:
+      type: object
+      required: [balanceKobo, spentThisMonthKobo, transactionCount, monthlySpend, recentTransactions]
+      properties:
+        balanceKobo: { type: integer, minimum: 0 }
+        spentThisMonthKobo: { type: integer, minimum: 0 }
+        transactionCount: { type: integer, minimum: 0 }
+        monthlySpend:
+          type: array
+          items:
+            $ref: "#/components/schemas/MonthlySpend"
+        recentTransactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Transaction"
+    MonthlySpend:
+      type: object
+      required: [month, amountKobo]
+      properties:
+        month: { type: string }
+        amountKobo: { type: integer, minimum: 0 }
+    WalletTopUpInput:
+      type: object
+      required: [amountKobo]
+      properties:
+        amountKobo: { type: integer, minimum: 100000, maximum: 50000000 }
+    WalletTopUpResult:
+      type: object
+      required: [wallet, transaction]
+      properties:
+        wallet:
+          $ref: "#/components/schemas/Wallet"
+        transaction:
+          $ref: "#/components/schemas/Transaction"
+    PurchaseInput:
+      type: object
+      required: [serviceId, accountReference]
+      properties:
+        serviceId: { type: string, minLength: 1 }
+        accountReference: { type: string, minLength: 3, maxLength: 120 }
+        amountKobo: { type: integer, minimum: 100 }
+    Notification:
+      type: object
+      required: [id, title, message, isRead, createdAt]
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        message: { type: string }
+        isRead: { type: boolean }
+        createdAt: { type: string, format: date-time }
+    AdminOverview:
+      type: object
+      required: [totalUsers, activeUsers, transactionsToday, volumeTodayKobo, pendingTransactions, recentTransactions]
+      properties:
+        totalUsers: { type: integer, minimum: 0 }
+        activeUsers: { type: integer, minimum: 0 }
+        transactionsToday: { type: integer, minimum: 0 }
+        volumeTodayKobo: { type: integer, minimum: 0 }
+        pendingTransactions: { type: integer, minimum: 0 }
+        recentTransactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminTransaction"
+    AdminUser:
+      type: object
+      required: [id, email, name, phone, role, isActive, balanceKobo, createdAt]
+      properties:
+        id: { type: string }
+        email: { type: string, format: email }
+        name: { type: string }
+        phone: { type: ["string", "null"] }
+        role: { type: string, enum: [customer, admin] }
+        isActive: { type: boolean }
+        balanceKobo: { type: integer, minimum: 0 }
+        createdAt: { type: string, format: date-time }
+    AdminUserUpdate:
+      type: object
+      properties:
+        role: { type: string, enum: [customer, admin] }
+        isActive: { type: boolean }
+    AdminTransaction:
+      allOf:
+        - $ref: "#/components/schemas/Transaction"
+        - type: object
+          required: [userId, userEmail, userName]
+          properties:
+            userId: { type: string }
+            userEmail: { type: string, format: email }
+            userName: { type: string }
 
