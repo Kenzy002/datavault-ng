@@ -1,0 +1,28 @@
+kind = "slides"
+previewPath = "/datavault-project-overview/"
+title = "DataVault Nigeria Project Overview"
+description = "An eight-slide overview of the DataVault Nigeria product, customer and admin flows, test-mode safeguards, architecture, and requirements for a future live rollout."
+version = "1.0.0"
+id = "artifacts/datavault-project-overview"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/datavault-project-overview/" ]
+localPort = 24449
+
+[services.development]
+run = "pnpm --filter @workspace/datavault-project-overview run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/datavault-project-overview", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/datavault-project-overview/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24449"
+BASE_PATH = "/datavault-project-overview/"
