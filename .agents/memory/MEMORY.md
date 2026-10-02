@@ -1,0 +1,1 @@
+- [DataVault test-only payments](datavault-payment-scope.md) — Keep bill purchases and wallet top-ups simulated until the user explicitly asks for live providers.
