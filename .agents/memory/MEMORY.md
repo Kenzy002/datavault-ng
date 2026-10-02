@@ -1,1 +1,2 @@
 - [DataVault test-only payments](datavault-payment-scope.md) — Keep bill purchases and wallet top-ups simulated until the user explicitly asks for live providers.
+- [DataVault authentication testing](datavault-auth-testing.md) — Use real Clerk flows; never mock or bypass authentication.
